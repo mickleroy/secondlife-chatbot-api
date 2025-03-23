@@ -7,9 +7,6 @@ on:
         description: 'Environment to bootstrap (Dev or Production)'
         required: true
         default: 'Dev'
-      awsAccountId:
-        description: 'AWS Account ID'
-        required: true
 
 env:
   AWS_REGION: ap-southeast-2
@@ -28,6 +25,9 @@ jobs:
         with:
             node-version: '20'
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Install AWS CDK
         run: npm install -g aws-cdk
 
@@ -36,5 +36,5 @@ jobs:
             AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
             AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
             AWS_REGION: ${{ env.AWS_REGION }}
-            AWS_ACCOUNT_ID: ${{ github.event.inputs.awsAccountId }}
-        run: npx cdk bootstrap aws://$AWS_ACCOUNT_ID/$AWS_REGION
+            AWS_ACCOUNT_ID: ${{ secrets.AWS_ACCOUNT_ID }}
+        run: cdk bootstrap aws://$AWS_ACCOUNT_ID/$AWS_REGION
