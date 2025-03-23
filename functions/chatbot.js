@@ -21,6 +21,17 @@ async function getMistralApiKey() {
   return response.Parameter.Value;
 }
 
+async function getPreprompt() {
+  console.log('Getting preprompt from SSM');
+  const command = new GetParameterCommand({
+    Name: process.env.PREPROMPT_PARAMETER,
+    WithDecryption: true
+  });
+
+  const response = await ssmClient.send(command);
+  return response.Parameter.Value;
+}
+
 async function getChatHistory(userId) {
   console.log('Getting chat history from S3');
   try {
@@ -90,6 +101,15 @@ export const handler = async (event) => {
 
     // Retrieve chat history from S3
     let chatHistory = await getChatHistory(userId);
+
+    // If no chat history, add preprompt
+    if (chatHistory.length === 0) {
+      const preprompt = await getPreprompt();
+      chatHistory.push({
+        role: "system",
+        content: preprompt
+      });
+    }
 
     // Add user's new message to history
     chatHistory.push({
