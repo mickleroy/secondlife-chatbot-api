@@ -1,0 +1,72 @@
+name: Deploy 🚀
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths-ignore:
+      - '.github/**'
+
+env:
+  AWS_REGION: ap-southeast-2
+
+jobs:
+  deploy-dev:
+    name: Deploy to Dev
+    runs-on: ubuntu-latest
+    environment: Dev
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4.2.2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4.3.0
+        with:
+            node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+
+      - name: Deploy with CDK
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+            CDK_DEFAULT_REGION: ${{ env.AWS_REGION }}
+        run: cdk deploy --require-approval never
+
+  deploy-prod:
+    name: Deploy to Production
+    needs: deploy-dev
+    runs-on: ubuntu-latest
+    environment: Production
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+            node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install AWS CDK
+        run: npm install -g aws-cdk
+        
+      - name: Deploy with CDK
+        id: deploy
+        env:
+            AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+            AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+            CDK_DEFAULT_ACCOUNT: ${{ secrets.AWS_ACCOUNT_ID }}
+            CDK_DEFAULT_REGION: ${{ env.AWS_REGION }}
+            NODE_ENV: production
+        run: cdk deploy --require-approval never
