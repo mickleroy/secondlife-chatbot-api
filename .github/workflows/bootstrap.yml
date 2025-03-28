@@ -11,6 +11,9 @@ on:
 env:
   AWS_REGION: ap-southeast-2
 
+permissions:
+  contents: read
+
 jobs:
   bootstrap:
     runs-on: ubuntu-latest
